@@ -17,7 +17,7 @@ The project aims to analyze and quantify the effects of stereotypes in various L
 ## Prerequisites
 
 - **Python**: Ensure you have Python 3.10 or later installed.
-- **OpenAI API Key**: Obtain an API key from OpenAI.
+- **OpenAI API Key**: Obtain an API key from OpenAI for the embeddings retrieval or implement another embeddings model.
 - **Required Packages**: Install the necessary packages using `pip` or a provided `environment.yaml` file.
 
 ## Installation
