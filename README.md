@@ -22,4 +22,41 @@ The project aims to analyze and quantify the effects of stereotypes in various L
 
 ## Installation
 
-1. Clone this repository:
+**Create a Python Environment**:
+   Create a Python environment using the required packages detailed in `environment.yaml`:
+   ```
+   conda env create -f environment.yaml
+   ```
+   Or manually install the necessary package:
+   ```
+   pip install openai
+   ```
+
+## Usage
+
+1. **Run the Main Script**:
+  Chose a combination of model and dataset (see Main.py help for more info.).
+   ```
+   claude-3-opus-20240229
+   ```
+   ```
+   python main.py
+   ```
+     Calibration
+     ```
+          python main.py --model="llama-3" --dataset_type="calibration" --bias="ageism" --id_columns "prompt_id" "stereotype_group_id" --columns "neutral" "change_1" "change_2" "change_3" "change_4" "change_5" --dataset_path="./Datasets/Ethnicities - Calibration.tsv" --saving_path="./Ethnicities/Calibration/" --open_ai_key=<OPENAI KEY> --hugging_face_key=<HUGGINGFACE KEY>
+     ```
+   ```
+   python main.py
+   ```
+     Calibration
+     ```
+          python main.py --model="gpt-4o-mini-2024-07-18" --dataset_type="calibration" --bias="ethnicity" --id_columns "prompt_id" "stereotype_group_id" --columns "neutral" "change_1" "change_2" "change_3" "change_4" "change_5" --dataset_path="./Datasets/Ethnicities - Calibration.tsv" --saving_path="./Ethnicities/Calibration/" --open_ai_key=<OPENAI KEY> 
+     ```
+   ```
+   python main.py
+   ```
+     Calibration
+     ```
+     python main.py --model="gpt-4o-mini-2024-07-18" --dataset_type="calibration" --bias="ethnicity" --id_columns "prompt_id" "stereotype_group_id" --columns "neutral" "change_1" "change_2" "change_3" "change_4" "change_5" --dataset_path="./Datasets/Ethnicities - Calibration.tsv" --saving_path="./Ethnicities/Calibration/" --open_ai_key=<OPENAI KEY> 
+     ```
