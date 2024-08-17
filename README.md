@@ -41,33 +41,36 @@ The project aims to analyze and quantify the effects of stereotypes in various L
    
 ### Gender
 
-   ```
-python main.py --model="claude-3-opus-20240229" --dataset_type=<YYYY-MM-DD> --bias="gender" --id_columns "prompt_id" "stereotype_group_id" --columns "neutral" "change_1" "change_2" "change_3" "change_4" "change_5" --dataset_path="./Datasets/Gender - Calibration.tsv" --saving_path="./Gender/Calibration/" --open_ai_key=<OPENAI KEY> --anthropic_key=<ANTHROPIC KEY>   ```
-
+```
+python main.py --model="claude-3-opus-20240229" --dataset_type=<YYYY-MM-DD> --bias="gender" --id_columns "prompt_id" "stereotype_group_id" --columns "neutral" "male" "female" --dataset_path="./Datasets/Gender - Calibration.tsv" --saving_path="./Gender/Calibration/" --open_ai_key=<OPENAI KEY> --anthropic_key=<ANTHROPIC KEY>
+```
 
 #### - Calibration
- 
-     ```
-          python main.py --model="llama-3" --dataset_type="calibration" --bias="gender" --id_columns "prompt_id" "stereotype_group_id" --columns "neutral" "change_1" "change_2" "change_3" "change_4" "change_5" --dataset_path="./Datasets/Gender - Calibration.tsv" --saving_path="./Gender/Calibration/" --open_ai_key=<OPENAI KEY> --hugging_face_key=<HUGGINGFACE KEY>
-     ```
+
+```
+python main.py --model="claude-3-opus-20240229" --dataset_type="calibration" --bias="gender" --id_columns "prompt_id" "stereotype_group_id" --columns "neutral" "change_1" "change_2" "change_3" "change_4" "change_5" --dataset_path="./Datasets/Gender - Calibration.tsv" --saving_path="./Gender/Calibration/" --open_ai_key=<OPENAI KEY> --anthropic_key=<ANTHROPIC KEY>
+```
+
 ### Ageism
-   ```
-        python main.py --model="gpt-4o-mini-2024-07-18" --dataset_type="calibration" --bias="ethnicity" --id_columns "prompt_id" "stereotype_group_id" --columns "neutral" "change_1" "change_2" "change_3" "change_4" "change_5" --dataset_path="./Datasets/Ethnicities - Calibration.tsv" --saving_path="./Ethnicities/Calibration/" --open_ai_key=<OPENAI KEY>    ```
 
-        
-   #### - Calibration
+```
+python main.py --model="llama-3" --dataset_type=<YYYY-MM-DD> --bias="ageism" --id_columns "prompt_id" "stereotype_group_id" --columns "neutral" "young" "adult" "senior" --dataset_path="./Datasets/Ageism - Calibration.tsv" --saving_path="./Ageism/Calibration/" --open_ai_key=<OPENAI KEY> --hugging_face_key=<HUGGINGFACE KEY>
+```
+     
+#### - Calibration
 
-      ```
-      python main.py --model="gpt-4o-mini-2024-07-18" --dataset_type="calibration" --bias="ageism" --id_columns "prompt_id" "stereotype_group_id" --columns "neutral" "change_1" "change_2" "change_3" "change_4" "change_5" --dataset_path="./Datasets/Ageism - Calibration.tsv" --saving_path="./Ageism/Calibration/" --open_ai_key=<OPENAI KEY> 
-      ```
+```
+python main.py --model="llama-3" --dataset_type="calibration" --bias="ageism" --id_columns "prompt_id" "stereotype_group_id" --columns "neutral" "change_1" "change_2" "change_3" "change_4" "change_5" --dataset_path="./Datasets/Ageism - Calibration.tsv" --saving_path="./Ageism/Calibration/" --hugging_face_key=<HUGGINGFACE KEY>
+```
 
 ### Ethnicity
-   ```
-        python main.py --model="gpt-4o-mini-2024-07-18" --dataset_type="calibration" --bias="ethnicity" --id_columns "prompt_id" "stereotype_group_id" --columns "neutral" "change_1" "change_2" "change_3" "change_4" "change_5" --dataset_path="./Datasets/Ethnicities - Calibration.tsv" --saving_path="./Ethnicities/Calibration/" --open_ai_key=<OPENAI KEY>    ```
 
+```
+python main.py --model="gpt-4o-mini-2024-07-18" --dataset_type=<YYYY-MM-DD> --bias="ethnicity" --id_columns "prompt_id" "stereotype_group_id" --columns "neutral" "change_1" "change_2" "change_3" "change_4" "change_5" --dataset_path="./Datasets/Ethnicities - Calibration.tsv" --saving_path="./Ethnicities/Calibration/" --open_ai_key=<OPENAI KEY>    
+```
 
-   #### - Calibration
+#### - Calibration
 
-        ```
-        python main.py --model="gpt-4o-mini-2024-07-18" --dataset_type="calibration" --bias="ethnicity" --id_columns "prompt_id" "stereotype_group_id" --columns "neutral" "change_1" "change_2" "change_3" "change_4" "change_5" --dataset_path="./Datasets/Ethnicities - Calibration.tsv" --saving_path="./Ethnicities/Calibration/" --open_ai_key=<OPENAI KEY> 
-        ```
+```
+python main.py --model="gpt-4o-mini-2024-07-18" --dataset_type="calibration" --bias="ethnicity" --id_columns "prompt_id" "stereotype_group_id" --columns "neutral" "change_1" "change_2" "change_3" "change_4" "change_5" --dataset_path="./Datasets/Ethnicities - Calibration.tsv" --saving_path="./Ethnicities/Calibration/" --open_ai_key=<OPENAI KEY> 
+```
