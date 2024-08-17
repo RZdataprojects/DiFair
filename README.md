@@ -74,3 +74,24 @@ python main.py --model="gpt-4o-mini-2024-07-18" --dataset_type=<YYYY-MM-DD> --bi
 ```
 python main.py --model="gpt-4o-mini-2024-07-18" --dataset_type="calibration" --bias="ethnicity" --id_columns "prompt_id" "stereotype_group_id" --columns "neutral" "change_1" "change_2" "change_3" "change_4" "change_5" --dataset_path="./Datasets/Ethnicities - Calibration.tsv" --saving_path="./Ethnicities/Calibration/" --open_ai_key=<OPENAI KEY> 
 ```
+
+## Project Structure
+
+```
+├── main.py               
+├── pipeline.py           
+├── responses.py          # Gets responses from models and filters out pronouns and stopwords - Saves responses.csv
+├── embeddings.py         # Retrieves embeddings - Saves an embeddings.parquet
+├── cos_similarity.py     # Calculates semantic distances - Saves cos_similarity.csv
+├── environment.yaml      # Conda environment configuration file
+├── SEiLLM.ipynb          # Statistical analysis of results
+└── README.md             # Project documentation
+```
+
+## License
+
+## Contributing
+Contributions are welcome! Please submit a pull request or open an issue to discuss proposed changes.
+
+## Acknowledgements
+[Add citations]
