@@ -79,17 +79,23 @@ python main.py --model="gpt-4o-mini-2024-07-18" --dataset_type="calibration" --b
 
 ```
 ├───── Ageism ─── Calibration ─── Consine Similiarity     # Cos Similiarity of Calibration set values received during the experiments 
-              |                └── Responses              # Text responses of Calibration set received during the experiments 
+              |                └── Responses              # Text responses of Calibration set received during the experiments
               ├── Consine Similiarity                     # Cos Similiarity of Ageism dataset values received during the experiments 
-              └── Responses                               # Text responses of Ageism dataset received during the experiments
+              ├── Responses                               # Text responses of Ageism dataset received during the experiments
+              ├── Ageism - Calibration.tsv                # Ageism calibration dataset
+              └── Ageism.tsv                              # Ageism dataset
 ├───── Ethnicity ─── Calibration ─── Consine Similiarity  # Cos Similiarity of Calibration set values received during the experiments 
               |                └── Responses              # Text responses of Calibration set received during the experiments 
               ├── Consine Similiarity                     # Cos Similiarity of Ethnicity dataset values received during the experiments 
-              └── Responses                               # Text responses of Ethnicity dataset received during the experiments
+              ├── Responses                               # Text responses of Ethnicity dataset received during the experiments
+              ├── Ethnicities - Calibration.tsv           # Ethnicity calibration dataset
+              └── Ethnicities - Dataset.tsv               # Ethnicity dataset
 ├───── Gender ─── Calibration ─── Consine Similiarity     # Cos Similiarity of Calibration set values received during the experiments 
               |                └── Responses              # Text responses of Calibration set received during the experiments 
               ├── Consine Similiarity                     # Cos Similiarity of Gender dataset values received during the experiments 
-              └── Responses                               # Text responses of Gender dataset received during the experiments 
+              ├── Responses                               # Text responses of Gender dataset received during the experiments
+              ├── Gender - Calibration.tsv                # Gender calibration dataset
+              └── Gender Dataset.tsv                      # Gender dataset
 ├── main.py               
 ├── pipeline.py           
 ├── responses.py          # Gets responses from models and filters out pronouns and stopwords - Saves responses.csv
