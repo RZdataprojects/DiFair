@@ -94,4 +94,4 @@ python main.py --model="gpt-4o-mini-2024-07-18" --dataset_type="calibration" --b
 Contributions are welcome! Please submit a pull request or open an issue to discuss proposed changes.
 
 ## Acknowledgements
-[Add citations]
+Paper is under review.
