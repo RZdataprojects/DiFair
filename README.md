@@ -1,7 +1,7 @@
 # SEiLLM - Beyond Stereotypes: Evaluating Fairness Disparities in LLMs Toward Demographic Groups
 
 ![SEiLLM](https://github.com/RZdataprojects/SEiLLM/blob/main/SEiLLM%20Flow.png)
-This repository contains the code and pipeline for evaluating fairness disparities in Large Language Models (LLMs) with respect to demographic attributes and groups.
+This repository contains the code and pipeline for SEiLLM - *Stereotype evaluation in Large Language Models (LLMs)* with respect to demographic attributes and groups.
 
 ## Overview
 
