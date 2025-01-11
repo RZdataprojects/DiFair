@@ -108,6 +108,7 @@ python main.py --model="gpt-4o-mini-2024-07-18" --dataset_type="calibration" --b
 ```
 
 ## License
+Creative Commons Attribution-ShareAlike 4.0 International
 
 ## Contributing
 Contributions are welcome! Please submit a pull request or open an issue to discuss proposed changes.
