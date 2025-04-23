@@ -1,7 +1,7 @@
 # DiFair-LLM: Evaluating Fairness Disparities in LLMs Toward Demographic Groups
 
 ![DiFair](https://github.com/RZdataprojects/DiFair/blob/main/DiFair-LLM%20Flow.png)
-This repository contains the code and pipeline for SEiLLM - *Stereotype evaluation in Large Language Models (LLMs)* with respect to demographic attributes and groups.
+This repository contains the code and pipeline for DiFair-LLM: Evaluating Fairness Disparities in LLMs Toward Demographic Groups.
 
 ## Overview
 
@@ -103,7 +103,7 @@ python main.py --model="gpt-4o-mini-2024-07-18" --dataset_type="calibration" --b
 ├── embeddings.py         # Retrieves embeddings - Saves an embeddings.parquet
 ├── cos_similarity.py     # Calculates semantic distances - Saves cos_similarity.csv
 ├── environment.yaml      # Conda environment configuration file
-├── SEiLLM.ipynb          # Statistical analysis of results
+├── DiFair.ipynb          # Statistical analysis of results
 └── README.md             # Project documentation
 ```
 
