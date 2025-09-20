@@ -113,5 +113,11 @@ Creative Commons Attribution-ShareAlike 4.0 International
 ## Contributing
 Contributions are welcome! Please submit a pull request or open an issue to discuss proposed changes.
 
-## Acknowledgements
-Paper is under review.
+## Citation
+@inproceedings{coheninger2025difair,
+  title        = {DiFair-LLM: Evaluating Fairness Disparities in LLMs Toward Demographic Groups},
+  author       = {Cohen Inger, Nurit and Zaady, Roei and Solomon, Adir and Rokach, Lior and Shapira, Bracha},
+  booktitle    = {Proceedings of the 27th European Conference on Artificial Intelligence (ECAI 2025)},
+  year         = {2025},
+  note         = {Opening paper in the Fairness, Ethics, and Trust session},
+}
