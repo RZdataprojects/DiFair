@@ -4,204 +4,140 @@ import cos_similarity
 import initialize_models
 import pandas as pd
 from openai import OpenAI
+import logging
+from typing import List, Optional
+
+logger = logging.getLogger(__name__)
 
 
 def pipeline(dataset: pd.DataFrame,
              bias: str,
              dataset_type: str,
-             id_columns: list,
-             columns: list,
+             id_columns: List[str],
+             columns: List[str],
              saving_path: str,
              open_ai_key: str,
-             stereotype_dict: dict = None,
-             anthropic_key: str = None,
-             google_key: str = None,
-             hugging_face_key: str = None,
-             model: str = None,
-             verbose=1):
+             anthropic_key: Optional[str] = None,
+             google_key: Optional[str] = None,
+             hugging_face_key: Optional[str] = None,
+             model: Optional[str] = None,
+             verbose: bool = True) -> pd.DataFrame:
     """
-    A comprehensive pipeline for generating model responses, converting them into embeddings, 
-    and computing cosine similarities for strerotype-based biases detection and analysis.
+    A comprehensive pipeline for generating model responses, converting them into embeddings,
+    and computing cosine similarities for stereotype-based bias detection and analysis.
 
     Args:
         dataset (pd.DataFrame): The dataset containing prompts or inputs for the model.
         bias (str): The type of bias being analyzed.
-        dataset_type (str): Dataset type - meant for comments that you wish to save in the file's name ["YYYY-MM-DD", "calibration"].
-        id_columns (list): List of column names that represent identifiers in the dataset.
-        columns (list): List of column names containing prompts for which responses are generated.
-        stereotype_dict (dict): A dictionary mapping stereotypes to their corresponding prompt_id.
+        dataset_type (str): Dataset type (used in file naming, e.g., ["YYYY-MM-DD", "calibration"]).
+        id_columns (List[str]): Column names representing identifiers in the dataset.
+        columns (List[str]): Column names containing prompts for generating responses.
         saving_path (str): Path to save the generated CSV files.
-        open_ai_key (str): API key for OpenAI, necessary for embedding retrieval..
-        anthropic_key (str, optional): API key for Anthropic models. Default is None.
-        google_key (str, optional): API key for Google models. Default is None.
-        hugging_face_key (str, optional): API key for Hugging Face models. Default is None.
-        model (str, optional): The model to be used for generating responses. Default is None.
-        verbose (int, optional): Verbosity level for logging progress. Default is 1.
+        open_ai_key (str): API key for OpenAI embeddings (required).
+        anthropic_key (Optional[str]): API key for Anthropic models. Default is None.
+        google_key (Optional[str]): API key for Google models. Default is None.
+        hugging_face_key (Optional[str]): API key for Hugging Face models. Default is None.
+        model (Optional[str]): The model to use for generating responses. Default is None.
+        verbose (bool): Whether to log progress. Default is True.
 
     Returns:
-        pd.DataFrame: The DataFrame containing the final embeddings.
+        Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+            - df_responses: Model-generated responses.
+            - embedding_df: Embeddings for responses.
+            - cos_similarity_df: Cosine similarity results.
+    Raises:
+        ValueError: If the model is not supported or if required API keys are missing.
     """
-    model = model.lower()    
-    assert model in ['claude-3-opus-20240229',
-                     'gpt-4o-mini-2024-07-18',
-                     'gemini-1.0-pro',
-                     'gemma',
-                     'llama-2',
-                     'llama-3',
-                     'mistral',
-                     'yi'], """This model is not supported.\nThe supported models are 'claude-3-opus-20240229',
-                     'gpt-4o-mini-2024-07-18',
-                     'gemini-1.0-pro',
-                     'gemma',
-                     'llama-2',
-                     'llama-3',
-                     'mistral',
-                     'yi'."""
+
+    if model is None:
+        raise ValueError("You must specify a model.")
+
+    model = model.lower()
+    supported_models = {
+        "claude-3-opus-20240229",
+        "gpt-4o-mini-2024-07-18",
+        "gemini-1.0-pro",
+        "gemma",
+        "llama-2",
+        "llama-3",
+        "mistral",
+        "yi",
+    }
+
+    if model not in supported_models:
+        raise ValueError(
+            f"Model '{model}' is not supported.\n"
+            f"Supported models: {', '.join(sorted(supported_models))}"
+        )
     
-    assert open_ai_key != ' ', "API key for OpenAI embeddings is missing. Try again with a key or implement another embedding model."
-    
+    if not open_ai_key:  # OpenAI key is mandatory for embeddings
+        raise RuntimeError("OpenAI API key is required for embeddings.\nTry again with a key or implement another embedding model.")
+
+    # Initialize logger
+    logger = logging.getLogger(__name__)
+    logging.basicConfig(level=logging.INFO if verbose else logging.WARNING)
+
     bias = bias.lower()
     dataset_type = dataset_type.lower()
-    client = OpenAI(api_key=open_ai_key)
-    
-    if verbose:
-        print('getting model outputs: ', model)
-        print('saving directory: ', saving_path)
-        print('bias: ', bias)
-        print('dataset type: ', dataset_type)
-        
-    if model == 'claude-3-opus-20240229':
-        anthropic_client = initialize_models.initialize_anthropic(anthropic_key)
-        df_responses = responses.create_responses_df(dataset=dataset,
-                                                     bias=bias,
-                                                     dataset_type=dataset_type, 
-                                                     id_columns=id_columns, 
-                                                     columns=columns, 
-                                                     saving_path=saving_path, 
-                                                     model=model, 
-                                                     client=anthropic_client, 
-                                                     hugging_face_model=None, 
-                                                     tokenizer=None, 
-                                                     verbose=1)
-    if model == 'llama-2':
-        llama_model, tokenizer = initialize_models.initialize_llama2(hugging_face_key)
-        df_responses = responses.create_responses_df(dataset=dataset,
-                                                     bias=bias, 
-                                                     dataset_type=dataset_type, 
-                                                     id_columns=id_columns, 
-                                                     columns=columns, 
-                                                     saving_path=saving_path, 
-                                                     model=model, 
-                                                     client=None, 
-                                                     hugging_face_model=llama_model, 
-                                                     tokenizer=tokenizer, 
-                                                     verbose=1)
-    if model == 'llama-3':
-        llama_model, tokenizer = initialize_models.initialize_llama3(hugging_face_key)
-        df_responses = responses.create_responses_df(dataset=dataset,
-                                                     bias=bias, 
-                                                     dataset_type=dataset_type,
-                                                     id_columns=id_columns, 
-                                                     columns=columns, 
-                                                     saving_path=saving_path, 
-                                                     model=model, 
-                                                     client=None,
-                                                     hugging_face_model=llama_model, 
-                                                     tokenizer=tokenizer, 
-                                                     verbose=1)
-    if model == 'mistral':
-        mistral_model, tokenizer = initialize_models.initialize_mistral(hugging_face_key)
-        df_responses = responses.create_responses_df(dataset=dataset,
-                                                     bias=bias, 
-                                                     dataset_type=dataset_type,
-                                                     id_columns=id_columns, 
-                                                     columns=columns, 
-                                                     saving_path=saving_path,
-                                                     model=model,
-                                                     client=None, 
-                                                     hugging_face_model=mistral_model,
-                                                     tokenizer=tokenizer,
-                                                     verbose=1)
-    if model == 'gpt-4o-mini-2024-07-18':
-        df_responses = responses.create_responses_df(dataset=dataset,
-                                                     bias=bias, 
-                                                     dataset_type=dataset_type, 
-                                                     id_columns=id_columns, 
-                                                     columns=columns, 
-                                                     saving_path=saving_path, 
-                                                     model=model, 
-                                                     client=client,
-                                                     hugging_face_model=None,
-                                                     tokenizer=None, 
-                                                     verbose=1)
-    if model == 'gemma':
-        gemma_model, tokenizer = initialize_models.initialize_gemma(hugging_face_key)
-        df_responses = responses.create_responses_df(dataset=dataset, 
-                                                     bias=bias, 
-                                                     dataset_type=dataset_type, 
-                                                     id_columns=id_columns, 
-                                                     columns=columns, 
-                                                     saving_path=saving_path, 
-                                                     model=model,
-                                                     client=None, 
-                                                     hugging_face_model=gemma_model,
-                                                     tokenizer=tokenizer, 
-                                                     verbose=1)
-    if model == 'yi':
-        yi_model, tokenizer = initialize_models.initialize_yi(hugging_face_key)
-        df_responses = responses.create_responses_df(dataset=dataset,
-                                                     bias=bias, 
-                                                     dataset_type=dataset_type, 
-                                                     id_columns=id_columns, 
-                                                     columns=columns, 
-                                                     saving_path=saving_path,
-                                                     model=model, 
-                                                     client=None, 
-                                                     hugging_face_model=yi_model, 
-                                                     tokenizer=tokenizer, 
-                                                     verbose=1)
-    if model == 'gemini-1.0-pro':
-        gemini_1_pro_client = initialize_models.initialize_gemini_1_pro(model, google_key)
-        df_responses = responses.create_responses_df(dataset=dataset,
-                                                     bias=bias, 
-                                                     dataset_type=dataset_type, 
-                                                     id_columns=id_columns, 
-                                                     columns=columns, 
-                                                     saving_path=saving_path, 
-                                                     model=model, 
-                                                     client=gemini_1_pro_client,
-                                                     hugging_face_model=None,
-                                                     tokenizer=None,
-                                                     verbose=verbose)
 
-    if verbose:
-        print('50% - of the process is finished.\nThe responses dataframe has been saved. \nConverting filtered outputs to embeddings:')
-        
-    df_responses.columns = df_responses.columns.str.lower()
-    filtered_response_columns = [item for item in df_responses.columns if '_filtered' in item]
+    logger.info("Pipeline started | Model: %s | Bias: %s | Dataset type: %s", model, bias, dataset_type)
+    logger.info("Saving directory: %s", saving_path)
+
+    # Model initialization
+    init_dispatch = {
+        "claude-3-opus-20240229": lambda: (initialize_models.initialize_anthropic(anthropic_key), None, None),
+        "gpt-4o-mini-2024-07-18": lambda: (initialize_models.initialize_open_ai(open_ai_key), None, None),
+        "llama-2": lambda: (None, *initialize_models.initialize_llama2(hugging_face_key)),
+        "llama-3": lambda: (None, *initialize_models.initialize_llama3(hugging_face_key)),
+        "mistral": lambda: (None, *initialize_models.initialize_mistral(hugging_face_key)),
+        "gemma": lambda: (None, *initialize_models.initialize_gemma(hugging_face_key)),
+        "yi": lambda: (None, *initialize_models.initialize_yi(hugging_face_key)),
+        "gemini-1.0-pro": lambda: (initialize_models.initialize_gemini_1_pro(model, google_key), None, None),
+    }
+
+    client, hugging_face_model, tokenizer = init_dispatch[model]()
+
+    # --- Step 1: Generate responses ---
+    df_responses = responses.create_responses_df(
+        dataset=dataset,
+        bias=bias,
+        id_columns=id_columns,
+        columns=columns,
+        model=model,
+        client=client,
+        hugging_face_model=hugging_face_model,
+        tokenizer=tokenizer
+    )
+    df_responses.to_csv(saving_path + model + ' ' +  bias + ' ' + dataset_type + ' - ' + 'responses.csv', index=False)
+
+    logger.info('50% - of the process is finished.\nThe responses dataframe has been saved.\nConverting filtered outputs to embeddings:')
+
+
+    logger.info("Response columns standardized. Filtered columns: %s", filtered_response_columns)
+    # --- Step 2: Create embeddings ---
+    # Filtered response columns contain '_filtered' in their names and were processed to remove certain content (see responses.py)
+    filtered_response_columns = [col for col in df_responses.columns.str.lower() if "_filtered" in col]
+    embedding_client = OpenAI(api_key=open_ai_key)  # Embeddings client, can be replaced with another embedding model if needed
     embedding_df = embeddings.create_embeddings_df(
-                                                  filtered_response_dataset=df_responses, 
-                                                  bias=bias,
-                                                  dataset_type=dataset_type,
-                                                  id_columns=id_columns,
-                                                  columns=columns,
-                                                  filtered_response_columns=filtered_response_columns,
-                                                  client=client,
-                                                  model=model,
-                                                  saving_path=saving_path,
-                                                  verbose=verbose)
-    
-    if verbose:
-        print('75% - of the process is finished.\nGetting Cosine similarities from the embeddings:')
-    
-    cos_similarity.create_cos_similarity_df(dataset=embedding_df,
-                                            bias=bias, 
-                                            dataset_type=dataset_type,
-                                            id_columns=id_columns, 
-                                            columns=columns,
-                                            embedding_columns=embedding_df.columns,
-                                            model=model, 
-                                            saving_path=saving_path, 
-                                            verbose=1)
-    print('100% complete - pipeline finished running, CSVs created succesfully.')
-    return embedding_df
+        filtered_response_dataset=df_responses,
+        id_columns=id_columns,
+        columns=columns,
+        filtered_response_columns=filtered_response_columns,
+        client=embedding_client,
+        model=model,
+    )
+    embedding_df.to_parquet(saving_path + model + ' ' +  bias + ' ' + dataset_type + ' - ' + 'embeddings.parquet', index=False)
+
+    logger.info('75% - of the process is finished.\nGetting Cosine similarities from the embeddings:')
+
+    # --- Step 3: Compute cosine similarities ---
+    cos_similarity_df = cos_similarity.create_cos_similarity_df(
+        dataset=embedding_df,
+        id_columns=id_columns,
+        columns=columns,
+        embedding_columns= [col for col in embedding_df.columns if not col.endswith('_id')]
+    )
+    cos_similarity_df.to_csv(saving_path + model + ' ' +  bias + ' ' + dataset_type + ' - ' + 'cos_similarity.csv', index=False)
+
+    logger.info('100% complete - pipeline finished running, tables created successfully.')
+    return df_responses, embedding_df, cos_similarity_df

@@ -1,12 +1,12 @@
 """
 Module to initialize various language models including Hugging Face models,
 Anthropic, and Google Gemini.
-ChatGPT is initialized in the main pipeline file due to its role in retrieving embeddings.
 """
 
 import logging
 from typing import Tuple, Any
 from anthropic import Anthropic
+from openai import OpenAI
 import google.generativeai as genai
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
@@ -49,6 +49,21 @@ def initialize_anthropic(anthropic_key: str) -> Anthropic:
     """
     client = Anthropic(key=anthropic_key)
     logger.info("Initialized Anthropic client")
+    return client
+
+
+def initialize_open_ai(open_ai_key: str) -> Any:
+    """
+    Initialize OpenAI client.
+
+    Args:
+        open_ai_key (str): OpenAI API key.
+
+    Returns:
+        Any: OpenAI client instance.
+    """
+    client = OpenAI(api_key=open_ai_key)
+    logger.info("Initialized OpenAI client")
     return client
 
 
