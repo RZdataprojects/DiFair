@@ -1,3 +1,4 @@
+from typing import Union
 import numpy as np
 import pandas as pd
 import logging
@@ -5,7 +6,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def get_embedding(text, client, model="text-embedding-3-large", verbose=1):
+def get_embedding(text, client, model="text-embedding-3-large") -> Union[np.ndarray, None]:
     try:
         if not text:
             logger.warning("No model response provided, it is possible either model did not respond or removing stopwords failed. Manually check the output dataset when run is finished.")
@@ -17,7 +18,13 @@ def get_embedding(text, client, model="text-embedding-3-large", verbose=1):
     return None
 
 
-def create_embeddings_df(*, filtered_response_dataset, id_columns, columns, filtered_response_columns, client, model):
+def create_embeddings_df(*, filtered_response_dataset, id_columns, columns, filtered_response_columns, client, model) -> pd.DataFrame:
+    """
+    Retrieve embeddings for each filtered response column.
+
+    Returns:
+        pd.DataFrame: DataFrame containing embeddings.
+    """
     postfix = '_embeddings'
     embedding_columns = [col + postfix for col in columns]
     embedding_df = pd.DataFrame()

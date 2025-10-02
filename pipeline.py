@@ -20,8 +20,7 @@ def pipeline(dataset: pd.DataFrame,
              anthropic_key: Optional[str] = None,
              google_key: Optional[str] = None,
              hugging_face_key: Optional[str] = None,
-             model: Optional[str] = None,
-             verbose: bool = True) -> pd.DataFrame:
+             model: Optional[str] = None) -> pd.DataFrame:
     """
     A comprehensive pipeline for generating model responses, converting them into embeddings,
     and computing cosine similarities for stereotype-based bias detection and analysis.
@@ -38,7 +37,6 @@ def pipeline(dataset: pd.DataFrame,
         google_key (Optional[str]): API key for Google models. Default is None.
         hugging_face_key (Optional[str]): API key for Hugging Face models. Default is None.
         model (Optional[str]): The model to use for generating responses. Default is None.
-        verbose (bool): Whether to log progress. Default is True.
 
     Returns:
         Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
@@ -72,10 +70,6 @@ def pipeline(dataset: pd.DataFrame,
     
     if not open_ai_key:  # OpenAI key is mandatory for embeddings
         raise RuntimeError("OpenAI API key is required for embeddings.\nTry again with a key or implement another embedding model.")
-
-    # Initialize logger
-    logger = logging.getLogger(__name__)
-    logging.basicConfig(level=logging.INFO if verbose else logging.WARNING)
 
     bias = bias.lower()
     dataset_type = dataset_type.lower()

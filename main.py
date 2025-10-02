@@ -2,7 +2,7 @@ import pipeline
 import pandas as pd
 import os
 import argparse
-
+import logging
 
 def main():
     # Set up argument parser
@@ -18,9 +18,13 @@ def main():
     parser.add_argument('--hugging_face_key', type=str, required=False, help="Key for Hugging Face's models.")
     parser.add_argument('--dataset_path', type=str, required=True, help="Path to the dataset's TSV file with the prompts.")
     parser.add_argument('--saving_path', type=str, required=True, help='Path to save the results.')
-    parser.add_argument('--verbose', type=int, required=False, default=1, help='Verbosity level.')
+    parser.add_argument('--log_level', type=str, required=False, default='INFO',
+                        help='Logging level. Options: DEBUG, INFO, WARNING, ERROR, CRITICAL. Default is INFO.')
 
     args = parser.parse_args()
+
+    # Configure logging
+    logging.basicConfig(level=getattr(logging, args.log_level.upper(), logging.INFO))
 
     # Read the dataset
     df = pd.read_csv(args.dataset_path, sep='\t')
@@ -42,8 +46,7 @@ def main():
         anthropic_key=args.anthropic_key,  
         google_key=args.google_key, 
         hugging_face_key=args.hugging_face_key, 
-        model=args.model, 
-        verbose=args.verbose
+        model=args.model
     )
 
 if __name__ == '__main__':
