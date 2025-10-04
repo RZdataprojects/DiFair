@@ -6,15 +6,13 @@ from time import sleep
 import logging
 import nltk
 from nltk.corpus import stopwords
-from typing import Optional, Union, List
-
-
-nltk.download('punkt')
-nltk.download('stopwords')
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-logging.basicConfig(level=logging.WARNING)
+from typing import Optional, Union, List, Set
+from functools import partial
 
 # --- Setup device and logger ---
+nltk.download('punkt')
+nltk.download('punkt_tab')
+nltk.download('stopwords')
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 logger = logging.getLogger(__name__)
 
@@ -317,65 +315,81 @@ def get_response_01_ai_yi(user_prompt: str, model:str, hugging_face_model, token
     return generated_text
 
 
-def remove_stopwords(text: str, bias: Optional[str] = None) -> Optional[str]:
+def get_stopwords_list(bias: Optional[str] = None) -> Set[str]:
+    """
+    Returns a list of stopwords including custom stopwords based on the specified bias type.
+
+    Args:
+        bias (Optional[str]): The type of bias, used to determine custom stopwords to be removed.
+    Returns:
+        Set[str]: The list of stopwords.
+    """
+    # custom_stopwords are nouns related to the bias type from the dataset.
+    # This ensures any disparity detected is not a results of the presence of these words.
+    if bias == 'gender':
+        custom_stopwords = ['Jane', 'John', 'actor', 'actress', 'aunt', 'bachelor', 'bachelorette', 'boy',
+                            'boyfriend', 'bride', 'brother', 'child', 'daughter', 'duchess', 'duke', 'emcee',
+                            'father', 'firefighter', 'fireman', 'firewoman', 'flight attendant', 'flight-attendant',
+                            'friend', 'gentleman', 'girl', 'girlfriend', 'grandchild', 'granddaughter', 'grandfather',
+                            'grandmother', 'grandparent', 'grandson', 'groom', 'he', 'him', 'her', 'they', 'them',
+                            'hero', 'heroine', 'heros', 'host', 'hostess', 'husband', 'kid', 'king', 'lady', 'lord',
+                            'madam', 'mailman', 'mailwoman', 'man', 'men', 'missis', 'mister', 'monarch', 'mother',
+                            'mr.', 'ms.', 'nephew', 'newlywed', 'niece', 'parent', 'partner', 'people', 'performer',
+                            'person', 'police officer', 'policeman', 'policewoman', 'postal worker', 'postal-worker',
+                            'worker', 'prince', 'princess', 'queen', 'royal', 'salesman', 'salesperson', 'saleswoman',
+                            'server', 'she', 'sibling', 'single person', 'sir', 'sister', 'son', 'spokesman',
+                            'spokesperson', 'spokeswoman', 'spouse', 'stepchild', 'stepdad', 'stepdaughter', 'stepmom',
+                            'stepparent', 'stepson', 'steward', 'stewardess', 'uncle', 'waiter', 'waitress',
+                            'who lost a spouse', 'who-lost-a-spouse', 'widow', 'widower', 'wife', 'woman', 'women']
+    elif bias == 'ageism':
+        custom_stopwords = ['person', 'man', 'woman', 'student', 'teenager', 'young', 'boy', 'girl', '15 year old',
+                            '20 year old', '30 year old', '40 year old', '15-year-old', '20-year-old', '30-year-old',
+                            '40-year-old', 'year-old', 'youngster', 'adult', 'employee', 'middle-aged', 'middle aged',
+                            'father', 'mother', 'year', 'breadwinner', 'senior', 'pensioner', 'elderly', 'old',
+                            'grandpa', 'grandma', 'elder', 'geezer', 'old-timer', 'oldtimer', 'old timer']
+    elif bias == 'ethnicity':
+        custom_stopwords = ['man', 'woman', 'person', 'american', 'white', 'asian', 'black', 'african', 'latino',
+                            'latin', 'native', 'cherokee', 'arab', 'middle', 'eastern', 'middle-eastern',
+                            'white-american', 'asian-american', 'black-american', 'african-american', 'latino-american',
+                            'latina', 'latina-american', 'latin-american', 'native-american', 'cherokee-american',
+                            'hispanic-american', 'middle-eastern-american', 'arab-american', 'hispanic',
+                            'Brad', 'Smith', 'David', 'Miller', 'Li', 'Chen', 'Malik', 'Williams', 'Xavier',
+                            'Rodriguez', 'Ricardo', 'Lopez']
+    else:
+        logger.warning(bias, " is not supported, add custom stopwords when implementing a custom dataset.")
+        custom_stopwords = []
+
+    stop_words = set(stopwords.words('english'))
+    if custom_stopwords:
+        stop_words.update(custom_stopwords)  # Add custom stopwords to the set
+    else:
+        logger.warning(
+            "No custom stopwords were added, continued with default NLTK stopwords. Results will be influenced by the presence of bias-related words.")
+
+    return stop_words
+
+
+def remove_stopwords(text: str, custom_stopwords: Set[str]) -> Optional[str]:
     """
     Cleans input text by removing unwanted characters, pronouns, and excessive whitespaces.
 
     Args:
         text (str): The input text to clean.
-        bias (Optional[str]): The type of bias, used to determine custom stopwords to be removed.
+        custom_stopwords (Set[str]): Custom stopwords to be removed.
     Returns:
         str: The cleaned text.
     """
-    # custom_stopwords are nouns related to the bias type from the dataset.
-    # This ensures any disparity detected is not a results of the presence of these words.
     try:
-        if bias == 'gender':
-            custom_stopwords = ['Jane', 'John', 'actor', 'actress', 'aunt', 'bachelor', 'bachelorette', 'boy', 
-                                'boyfriend', 'bride', 'brother', 'child', 'daughter', 'duchess', 'duke', 'emcee', 
-                                'father', 'firefighter', 'fireman', 'firewoman', 'flight attendant', 'flight-attendant', 
-                                'friend', 'gentleman', 'girl', 'girlfriend', 'grandchild', 'granddaughter', 'grandfather', 
-                                'grandmother', 'grandparent', 'grandson', 'groom', 'he', 'him', 'her', 'they', 'them', 
-                                'hero', 'heroine', 'heros', 'host', 'hostess', 'husband', 'kid', 'king', 'lady', 'lord', 
-                                'madam', 'mailman', 'mailwoman', 'man', 'men', 'missis', 'mister', 'monarch', 'mother', 
-                                'mr.', 'ms.', 'nephew', 'newlywed', 'niece', 'parent', 'partner', 'people', 'performer', 
-                                'person', 'police officer', 'policeman', 'policewoman', 'postal worker', 'postal-worker',
-                                'worker', 'prince', 'princess', 'queen', 'royal', 'salesman', 'salesperson', 'saleswoman',
-                                'server', 'she', 'sibling', 'single person', 'sir', 'sister', 'son', 'spokesman',
-                                'spokesperson', 'spokeswoman', 'spouse', 'stepchild', 'stepdad', 'stepdaughter', 'stepmom', 
-                                'stepparent', 'stepson', 'steward', 'stewardess', 'uncle', 'waiter', 'waitress',
-                                'who lost a spouse', 'who-lost-a-spouse', 'widow', 'widower', 'wife', 'woman', 'women']
-        elif bias == 'ageism':
-            custom_stopwords = ['person', 'man', 'woman', 'student', 'teenager', 'young', 'boy', 'girl', '15 year old', 
-                                '20 year old', '30 year old', '40 year old', '15-year-old', '20-year-old', '30-year-old', 
-                                '40-year-old', 'year-old', 'youngster', 'adult', 'employee', 'middle-aged', 'middle aged', 
-                                'father', 'mother', 'year', 'breadwinner', 'senior', 'pensioner', 'elderly', 'old',
-                                'grandpa', 'grandma', 'elder', 'geezer', 'old-timer', 'oldtimer', 'old timer']
-        elif bias == 'ethnicity':
-            custom_stopwords = ['man', 'woman', 'person', 'american', 'white', 'asian', 'black', 'african', 'latino',
-                                'latin', 'native', 'cherokee', 'arab', 'middle', 'eastern', 'middle-eastern',
-                                'white-american', 'asian-american', 'black-american', 'african-american', 'latino-american',
-                                'latina', 'latina-american', 'latin-american', 'native-american', 'cherokee-american',
-                                'hispanic-american', 'middle-eastern-american', 'arab-american', 'hispanic',
-                                'Brad', 'Smith', 'David', 'Miller',	'Li', 'Chen', 'Malik', 'Williams', 'Xavier', 
-                                'Rodriguez', 'Ricardo', 'Lopez']
-        else:
-            logger.warning(bias, " is not supported, add custom stopwords when implementing a custom dataset.")
-            custom_stopwords = []
-
-        stop_words = set(stopwords.words('english'))
-        if custom_stopwords:
-            stop_words.update(custom_stopwords)  # Add custom stopwords to the set
-        else:
-            logger.warning("No custom stopwords were added, continued with default NLTK stopwords. Results will be influenced by the presence of bias-related words.")
-
         # Remove multi-word stopwords using regex
+        # This step is needed for multi-word stopwords (e.g., "flight attendant")
         for phrase in custom_stopwords:
             phrase_pattern = re.compile(r'\b' + re.escape(phrase) + r'\b', re.IGNORECASE)
             text = phrase_pattern.sub('', text)
 
+        # Token filtering ensures any remaining single-word stopwords
+        # (missed by regex due to punctuation or tokenization) are removed
         tokens = nltk.word_tokenize(text)
-        filtered_tokens = [word for word in tokens if word.lower() not in stop_words]
+        filtered_tokens = [word for word in tokens if word.lower() not in custom_stopwords]
         filtered_text = ' '.join(filtered_tokens)
         
         # Remove extra spaces around punctuation
@@ -391,7 +405,7 @@ def remove_stopwords(text: str, bias: Optional[str] = None) -> Optional[str]:
     logger.debug("Removed stopwords.")
     return filtered_text
 
-def get_response(user_prompt: str, model: str, logger: logging.Logger, client=None, hugging_face_model=None, tokenizer=None) -> Union[str, None]:
+def get_response(user_prompt: str, model: str, client=None, hugging_face_model=None, tokenizer=None) -> Union[str, None]:
     """
     This method calls a get_response_<org>_<model name> according to the model parameter based on the model selected. 
 
@@ -404,21 +418,20 @@ def get_response(user_prompt: str, model: str, logger: logging.Logger, client=No
     tokenizer: Tokenizer object for processing input (optional).
     """
     if model == 'claude-3':
-        return get_response_anthropic(user_prompt=user_prompt, model=model, client=client, logger=logger)
+        return get_response_anthropic(user_prompt=user_prompt, model=model, client=client)
     if model in ['llama-2', 'llama-3']:
-        return get_response_meta_llama(user_prompt=user_prompt, model=model, hugging_face_model=hugging_face_model, tokenizer=tokenizer, logger=logger)
-    if model in ['gpt-4o-mini-2024-07-18']:
-        return get_response_open_ai(user_prompt=user_prompt, model=model, client=client, logger=logger)
+        return get_response_meta_llama(user_prompt=user_prompt, model=model, hugging_face_model=hugging_face_model, tokenizer=tokenizer)
+    if model == 'gpt-4o-mini-2024-07-18':
+        return get_response_open_ai(user_prompt=user_prompt, model=model, client=client)
     if model == 'gemma':
-        return get_response_google_gemma(user_prompt=user_prompt, model=model, hugging_face_model=hugging_face_model, tokenizer=tokenizer, logger=logger)
+        return get_response_google_gemma(user_prompt=user_prompt, model=model, hugging_face_model=hugging_face_model, tokenizer=tokenizer)
     if model == 'yi':
-        return get_response_01_ai_yi(user_prompt=user_prompt, model=model, hugging_face_model=hugging_face_model, tokenizer=tokenizer, logger=logger)
-    if model == 'gemini-1.0-pro':
-        return get_response_google_gemini_1_pro(user_prompt=user_prompt, model=model, client=client, logger=logger)
+        return get_response_01_ai_yi(user_prompt=user_prompt, model=model, hugging_face_model=hugging_face_model, tokenizer=tokenizer)
+    if model in ['gemini-1.0-pro', 'gemini-2.5-flash-lite']:
+        return get_response_google_gemini_1_pro(user_prompt=user_prompt, model=model, client=client)
     if model == 'mistral':
-        return get_response_mistral_ai_mistral(user_prompt=user_prompt, model=model, hugging_face_model=hugging_face_model, tokenizer=tokenizer, logger=logger)
-    logger.warning(f'error, model "{model}" not in built-in options.\nCannot retrieve responses.')
-    return None
+        return get_response_mistral_ai_mistral(user_prompt=user_prompt, model=model, hugging_face_model=hugging_face_model, tokenizer=tokenizer)
+    raise ValueError(f'Model "{model}" not supported.')
 
 
 def create_responses_df(
@@ -448,15 +461,18 @@ def create_responses_df(
             if client is None:
                 response = get_response(user_prompt=row[column],
                                         model=model,
-                                        logger=logger,
                                         hugging_face_model=hugging_face_model,
                                         tokenizer=tokenizer
                             )
             else:
-                response = get_response(user_prompt=row[column], model=model, client=client, verbose=verbose)
+                response = get_response(user_prompt=row[column], model=model, client=client)
             responses_df.at[idx, column + postfix] = response
+
+    custom_stopwords = get_stopwords_list(bias)
+    remove_stopwords_with_custom = partial(remove_stopwords, custom_stopwords=custom_stopwords)
+
     for col in columns:
         filtered_col = col + postfix + '_filtered'  # remove stopwords and custom stopwords
-        responses_df[filtered_col] = responses_df[col + postfix].apply(remove_stopwords, args=(bias,))
+        responses_df[filtered_col] = responses_df[col + postfix].apply(remove_stopwords_with_custom)
 
     return responses_df

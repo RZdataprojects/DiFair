@@ -1,4 +1,6 @@
-import responses 
+from pandas import DataFrame
+
+import responses
 import embeddings
 import cos_similarity
 import initialize_models
@@ -20,7 +22,7 @@ def pipeline(dataset: pd.DataFrame,
              anthropic_key: Optional[str] = None,
              google_key: Optional[str] = None,
              hugging_face_key: Optional[str] = None,
-             model: Optional[str] = None) -> pd.DataFrame:
+             model: Optional[str] = None) -> tuple[DataFrame, DataFrame, DataFrame]:
     """
     A comprehensive pipeline for generating model responses, converting them into embeddings,
     and computing cosine similarities for stereotype-based bias detection and analysis.
@@ -46,27 +48,6 @@ def pipeline(dataset: pd.DataFrame,
     Raises:
         ValueError: If the model is not supported or if required API keys are missing.
     """
-
-    if model is None:
-        raise ValueError("You must specify a model.")
-
-    model = model.lower()
-    supported_models = {
-        "claude-3-opus-20240229",
-        "gpt-4o-mini-2024-07-18",
-        "gemini-1.0-pro",
-        "gemma",
-        "llama-2",
-        "llama-3",
-        "mistral",
-        "yi",
-    }
-
-    if model not in supported_models:
-        raise ValueError(
-            f"Model '{model}' is not supported.\n"
-            f"Supported models: {', '.join(sorted(supported_models))}"
-        )
     
     if not open_ai_key:  # OpenAI key is mandatory for embeddings
         raise RuntimeError("OpenAI API key is required for embeddings.\nTry again with a key or implement another embedding model.")
@@ -80,6 +61,7 @@ def pipeline(dataset: pd.DataFrame,
     # Model initialization
     init_dispatch = {
         "claude-3-opus-20240229": lambda: (initialize_models.initialize_anthropic(anthropic_key), None, None),
+        "gemini-2.5-flash-lite": lambda: (initialize_models.initialize_gemini_1_pro(model, google_key), None, None),
         "gpt-4o-mini-2024-07-18": lambda: (initialize_models.initialize_open_ai(open_ai_key), None, None),
         "llama-2": lambda: (None, *initialize_models.initialize_llama2(hugging_face_key)),
         "llama-3": lambda: (None, *initialize_models.initialize_llama3(hugging_face_key)),
@@ -104,10 +86,10 @@ def pipeline(dataset: pd.DataFrame,
     )
     df_responses.to_csv(saving_path + model + ' ' +  bias + ' ' + dataset_type + ' - ' + 'responses.csv', index=False)
 
-    logger.info('50% - of the process is finished.\nThe responses dataframe has been saved.\nConverting filtered outputs to embeddings:')
+    logger.info('50% - of the process is finished. '
+                'The responses dataframe has been saved. '
+                'Converting filtered outputs to embeddings.')
 
-
-    logger.info("Response columns standardized. Filtered columns: %s", filtered_response_columns)
     # --- Step 2: Create embeddings ---
     # Filtered response columns contain '_filtered' in their names and were processed to remove certain content (see responses.py)
     filtered_response_columns = [col for col in df_responses.columns.str.lower() if "_filtered" in col]
@@ -117,12 +99,12 @@ def pipeline(dataset: pd.DataFrame,
         id_columns=id_columns,
         columns=columns,
         filtered_response_columns=filtered_response_columns,
-        client=embedding_client,
-        model=model,
+        client=embedding_client
     )
     embedding_df.to_parquet(saving_path + model + ' ' +  bias + ' ' + dataset_type + ' - ' + 'embeddings.parquet', index=False)
 
-    logger.info('75% - of the process is finished.\nGetting Cosine similarities from the embeddings:')
+    logger.info('75% - of the process is finished. '
+                'Getting Cosine similarities from the embeddings:')
 
     # --- Step 3: Compute cosine similarities ---
     cos_similarity_df = cos_similarity.create_cos_similarity_df(
