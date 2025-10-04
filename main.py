@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+from dotenv import load_dotenv
 import argparse
 import logging
 
@@ -11,10 +12,12 @@ def main():
     parser.add_argument('--bias', type=str, required=True, help='Bias type to be analyzed.')
     parser.add_argument('--id_columns', nargs='+', required=True, help='List of ID columns.')
     parser.add_argument('--columns', nargs='+', required=True, help='List of lowercase column headers to compare, e.g., ["male", "female", "neutral"].')
-    parser.add_argument('--open_ai_key', type=str, required=True, help="Key for OpenAI, necessary for embedding retrieval.")
-    parser.add_argument('--anthropic_key', type=str, required=False, help="Key for Anthropic's models.")
-    parser.add_argument('--google_key', type=str, required=False, help="Key for Google's models.")
-    parser.add_argument('--hugging_face_key', type=str, required=False, help="Key for Hugging Face's models.")
+    parser.add_argument('--temperature', type=float, required=False, default=0.5, help='Temperature for text generation.')
+    parser.add_argument('--max_tokens', type=int, required=False, default=1000, help='The maximum number of tokens allowed for text generation.')
+    parser.add_argument('--open_ai_api_key', type=str, required=True, help="Key for OpenAI, necessary for embedding retrieval.")
+    parser.add_argument('--anthropic_api_key', type=str, required=False, help="Key for Anthropic's models.")
+    parser.add_argument('--google_api_key', type=str, required=False, help="Key for Google's models.")
+    parser.add_argument('--hugging_face_api_key', type=str, required=False, help="Key for Hugging Face's models.")
     parser.add_argument('--dataset_path', type=str, required=True, help="Path to the dataset's TSV file with the prompts.")
     parser.add_argument('--saving_path', type=str, required=False, default="./output", help='Path to save the results.')
     parser.add_argument('--log_level', type=str, required=False, default='INFO',
@@ -43,12 +46,14 @@ def main():
         dataset_type=args.dataset_type, 
         id_columns=args.id_columns, 
         columns=args.columns, 
-        saving_path=args.saving_path, 
-        open_ai_key=args.open_ai_key, 
-        anthropic_key=args.anthropic_key,  
-        google_key=args.google_key, 
-        hugging_face_key=args.hugging_face_key, 
-        model=args.model
+        saving_path=args.saving_path,
+        temperature=args.temparature,
+        max_tokens=args.max_tokens,
+        open_ai_api_key=args.open_ai_api_key or os.getenv('OPENAI_API_KEY'),
+        anthropic_api_key=args.anthropic_api_key or os.getenv('ANTHROPIC_API_KEY'),
+        google_api_key=args.google_api_key or os.getenv('GOOGLE_API_KEY'),
+        hugging_face_api_key=args.hugging_face_api_key or os.getenv('HUGGING_FACE_TOKEN'),
+        model_name=args.model_name
     )
 
 if __name__ == '__main__':

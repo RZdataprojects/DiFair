@@ -6,6 +6,11 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+class Embeddings():
+    """Class for handling embeddings operations."""
+    def __init__(self, client):
+        self.client = client
+
 def get_embedding(text, client, model="text-embedding-3-large") -> Union[np.ndarray, None]:
     try:
         if not text:
