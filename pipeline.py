@@ -1,119 +1,103 @@
-from pandas import DataFrame
-
-import responses
-import embeddings
-import cos_similarity
-import initialize_models
+from responses import TextProcessor
+from embeddings import Embeddings
+from cos_similarity import SimilarityCalculator
 import pandas as pd
-from openai import OpenAI
 import logging
-from typing import List, Optional
+from typing import List, Optional, Tuple
+
+from models.open_ai import OpenAIModelAdapter
+from models.anthropic import AnthropicModelAdapter
+from models.google import GoogleModelAdapter
+from models.llama_2_3 import LlamaAdapter
+from models.mistral import MistralAdapter
+from models.gemma import GemmaAdapter
+from models.yi import YiAdapter
 
 logger = logging.getLogger(__name__)
 
 
-def pipeline(dataset: pd.DataFrame,
-             bias: str,
-             dataset_type: str,
-             id_columns: List[str],
-             columns: List[str],
-             saving_path: str,
-             open_ai_key: str,
-             anthropic_key: Optional[str] = None,
-             google_key: Optional[str] = None,
-             hugging_face_key: Optional[str] = None,
-             model: Optional[str] = None) -> tuple[DataFrame, DataFrame, DataFrame]:
-    """
-    A comprehensive pipeline for generating model responses, converting them into embeddings,
-    and computing cosine similarities for stereotype-based bias detection and analysis.
+class Pipeline:
+    @staticmethod
+    def run(dataset: pd.DataFrame,
+            bias: str,
+            title_comment: str,
+            id_columns: List[str],
+            columns: List[str],
+            saving_path: str,
+            open_ai_api_key:str,
+            google_api_key:Optional[str] = None,
+            hugging_face_api_key:Optional[str] = None,
+            anthropic_api_key:Optional[str] = None,
+            temperature: float = 0.5,
+            max_tokens: int = 1000,
+            model_name: Optional[str] = None
+            ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+        """
+        A comprehensive pipeline for generating model responses, converting them into embeddings,
+        and computing cosine similarities for stereotype-based bias detection and analysis.
 
-    Args:
-        dataset (pd.DataFrame): The dataset containing prompts or inputs for the model.
-        bias (str): The type of bias being analyzed.
-        dataset_type (str): Dataset type (used in file naming, e.g., ["YYYY-MM-DD", "calibration"]).
-        id_columns (List[str]): Column names representing identifiers in the dataset.
-        columns (List[str]): Column names containing prompts for generating responses.
-        saving_path (str): Path to save the generated CSV files.
-        open_ai_key (str): API key for OpenAI embeddings (required).
-        anthropic_key (Optional[str]): API key for Anthropic models. Default is None.
-        google_key (Optional[str]): API key for Google models. Default is None.
-        hugging_face_key (Optional[str]): API key for Hugging Face models. Default is None.
-        model (Optional[str]): The model to use for generating responses. Default is None.
+        Returns:
+            Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+                - df_responses: Model-generated responses.
+                - embedding_df: Embeddings for responses.
+                - cos_similarity_df: Cosine similarity results.
+        Raises:
+            ValueError: If the model is not supported or if required API keys are missing.
+        """
+        logger.info("Pipeline started | Model: %s | Bias: %s | Dataset type: %s", model_name, bias, title_comment)
+        logger.info("Saving directory: %s", saving_path)
 
-    Returns:
-        Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-            - df_responses: Model-generated responses.
-            - embedding_df: Embeddings for responses.
-            - cos_similarity_df: Cosine similarity results.
-    Raises:
-        ValueError: If the model is not supported or if required API keys are missing.
-    """
-    
-    if not open_ai_key:  # OpenAI key is mandatory for embeddings
-        raise RuntimeError("OpenAI API key is required for embeddings.\nTry again with a key or implement another embedding model.")
+        # Model initialization
+        init_dispatch = {
+            "claude-3-opus-20240229": lambda: AnthropicModelAdapter(anthropic_api_key=anthropic_api_key, temperature=temperature, max_tokens=max_tokens),
+            "gemini-2.5-flash-lite": lambda: GoogleModelAdapter(google_api_key=google_api_key, temperature=temperature, max_tokens=max_tokens),
+            "gemini-1.0-pro": lambda: GoogleModelAdapter(google_api_key=google_api_key, temperature=temperature, max_tokens=max_tokens),
+            "gpt-4o-mini-2024-07-18": lambda: OpenAIModelAdapter(open_ai_api_key=open_ai_api_key, temperature=temperature, max_tokens=max_tokens),
+            "llama-2": lambda: LlamaAdapter(version=2, hugging_face_api_key=hugging_face_api_key, temperature=temperature, max_tokens=max_tokens),
+            "llama-3": lambda: LlamaAdapter(version=3, hugging_face_api_key=hugging_face_api_key, temperature=temperature, max_tokens=max_tokens),
+            "mistral": lambda: MistralAdapter(hugging_face_api_key=hugging_face_api_key, temperature=temperature, max_tokens=max_tokens),
+            "gemma": lambda: GemmaAdapter(hugging_face_api_key=hugging_face_api_key, temperature=temperature, max_tokens=max_tokens),
+            "yi": lambda: YiAdapter(hugging_face_api_key=hugging_face_api_key, temperature=temperature, max_tokens=max_tokens),
+        }
 
-    bias = bias.lower()
-    dataset_type = dataset_type.lower()
+        model = init_dispatch[model_name]()
 
-    logger.info("Pipeline started | Model: %s | Bias: %s | Dataset type: %s", model, bias, dataset_type)
-    logger.info("Saving directory: %s", saving_path)
+        # --- Step 1: Generate responses ---
+        df_responses = TextProcessor(bias=bias).create_responses_df(
+            dataset=dataset,
+            id_columns=id_columns,
+            columns=columns,
+            model=model
+        )
+        df_responses.to_csv(saving_path + model.model_name + ' ' + bias + ' ' + title_comment + ' - ' + 'responses.csv', index=False)
 
-    # Model initialization
-    init_dispatch = {
-        "claude-3-opus-20240229": lambda: (initialize_models.initialize_anthropic(anthropic_key), None, None),
-        "gemini-2.5-flash-lite": lambda: (initialize_models.initialize_gemini_1_pro(model, google_key), None, None),
-        "gpt-4o-mini-2024-07-18": lambda: (initialize_models.initialize_open_ai(open_ai_key), None, None),
-        "llama-2": lambda: (None, *initialize_models.initialize_llama2(hugging_face_key)),
-        "llama-3": lambda: (None, *initialize_models.initialize_llama3(hugging_face_key)),
-        "mistral": lambda: (None, *initialize_models.initialize_mistral(hugging_face_key)),
-        "gemma": lambda: (None, *initialize_models.initialize_gemma(hugging_face_key)),
-        "yi": lambda: (None, *initialize_models.initialize_yi(hugging_face_key)),
-        "gemini-1.0-pro": lambda: (initialize_models.initialize_gemini_1_pro(model, google_key), None, None),
-    }
+        logger.info('50% - of the process is finished. '
+                    'The responses dataframe has been saved. '
+                    'Converting filtered outputs to embeddings.')
 
-    client, hugging_face_model, tokenizer = init_dispatch[model]()
+        # --- Step 2: Create embeddings ---
+        # Filtered response columns contain '_filtered' in their names and were processed to remove certain content (see responses.py)
+        filtered_response_columns = [col for col in df_responses.columns.str.lower() if "_filtered" in col]
+        embedding_client = Embeddings(open_ai_api_key=open_ai_api_key)  # Embeddings client, can be replaced with another embedding model if needed
+        embedding_df = embedding_client.create_embeddings_df(
+            filtered_response_dataset=df_responses,
+            id_columns=id_columns,
+            columns=columns,
+            filtered_response_columns=filtered_response_columns
+        )
+        embedding_df.to_parquet(saving_path + model.model_name + ' ' + bias + ' ' + title_comment + ' - ' + 'embeddings.parquet', index=False)
 
-    # --- Step 1: Generate responses ---
-    df_responses = responses.create_responses_df(
-        dataset=dataset,
-        bias=bias,
-        id_columns=id_columns,
-        columns=columns,
-        model=model,
-        client=client,
-        hugging_face_model=hugging_face_model,
-        tokenizer=tokenizer
-    )
-    df_responses.to_csv(saving_path + model + ' ' +  bias + ' ' + dataset_type + ' - ' + 'responses.csv', index=False)
+        logger.info('75% - of the process is finished. '
+                    'Getting Cosine similarities from the embeddings.')
 
-    logger.info('50% - of the process is finished. '
-                'The responses dataframe has been saved. '
-                'Converting filtered outputs to embeddings.')
+        # --- Step 3: Compute cosine similarities ---
+        cos_similarity_df = SimilarityCalculator().create_cos_similarity_df(
+            dataset=embedding_df,
+            id_columns=id_columns,
+            columns=columns,
+            embedding_columns= [col for col in embedding_df.columns if not col.endswith('_id')]
+        )
+        cos_similarity_df.to_csv(saving_path + model.model_name + ' ' + bias + ' ' + title_comment + ' - ' + 'cos_similarity.csv', index=False)
 
-    # --- Step 2: Create embeddings ---
-    # Filtered response columns contain '_filtered' in their names and were processed to remove certain content (see responses.py)
-    filtered_response_columns = [col for col in df_responses.columns.str.lower() if "_filtered" in col]
-    embedding_client = OpenAI(api_key=open_ai_key)  # Embeddings client, can be replaced with another embedding model if needed
-    embedding_df = embeddings.create_embeddings_df(
-        filtered_response_dataset=df_responses,
-        id_columns=id_columns,
-        columns=columns,
-        filtered_response_columns=filtered_response_columns,
-        client=embedding_client
-    )
-    embedding_df.to_parquet(saving_path + model + ' ' +  bias + ' ' + dataset_type + ' - ' + 'embeddings.parquet', index=False)
-
-    logger.info('75% - of the process is finished. '
-                'Getting Cosine similarities from the embeddings:')
-
-    # --- Step 3: Compute cosine similarities ---
-    cos_similarity_df = cos_similarity.create_cos_similarity_df(
-        dataset=embedding_df,
-        id_columns=id_columns,
-        columns=columns,
-        embedding_columns= [col for col in embedding_df.columns if not col.endswith('_id')]
-    )
-    cos_similarity_df.to_csv(saving_path + model + ' ' +  bias + ' ' + dataset_type + ' - ' + 'cos_similarity.csv', index=False)
-
-    logger.info('100% complete - pipeline finished running, tables created successfully.')
-    return df_responses, embedding_df, cos_similarity_df
+        logger.info('100% complete - pipeline finished running, tables created successfully.')
+        return df_responses, embedding_df, cos_similarity_df
