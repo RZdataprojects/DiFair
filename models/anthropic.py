@@ -1,4 +1,4 @@
-from base_model import BaseModelAdapter
+from .base_model import BaseModelAdapter
 import logging
 import os
 from anthropic import Anthropic

@@ -1,4 +1,4 @@
-from base_model import BaseModelAdapter
+from .base_model import BaseModelAdapter
 import logging
 import os
 import google.generativeai as genai
@@ -14,7 +14,7 @@ class GoogleModelAdapter(BaseModelAdapter):
                  temperature: float = 0.5,
                  max_tokens: int = 1000):
         os.environ['GOOGLE_API_KEY'] = google_api_key
-        model_name = "gemini-1.0-pro"
+        model_name = "gemini-2.5-flash-lite"#"gemini-1.0-pro"
         super().__init__(model_name=model_name, temperature=temperature, max_tokens=max_tokens)
         self.model = self.initialize_model(google_api_key)
 

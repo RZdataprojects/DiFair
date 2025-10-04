@@ -1,6 +1,6 @@
 from typing import Optional
 
-from hugging_face_models import HuggingFaceModelAdapter
+from .hugging_face_models import HuggingFaceModelAdapter
 import logging
 
 logger = logging.getLogger(__name__)

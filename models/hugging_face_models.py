@@ -1,4 +1,4 @@
-from base_model import BaseModelAdapter
+from .base_model import BaseModelAdapter
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 import logging

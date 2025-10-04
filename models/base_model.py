@@ -41,8 +41,6 @@ class BaseModelAdapter(ABC):
         self.model_name = model_name
         self.temperature = temperature
         self.max_tokens = max_tokens
-        self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
-        self.model = self.initialize_model()
 
     @abstractmethod
     def initialize_model(self, **kwargs):
