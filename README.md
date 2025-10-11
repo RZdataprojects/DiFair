@@ -37,7 +37,7 @@ by deviation from a neutral baseline.
 
 ## 🏗️ Architecture
 
-The pipeline consists of three main stages:
+The pipeline consists of four main stages:
 
 1. **Response Generation**: Generate model outputs for comparative prompts
 2. **Embedding Creation**: Convert filtered responses to semantic embeddings
@@ -80,7 +80,7 @@ python main.py \
   --id_columns "prompt_id" \
   --columns "neutral" "male" "female" \
   --open_ai_key "your_openai_key" \
-  --dataset_path "./data/prompts.csv" \
+  --dataset_path "./Gender/Gender Dataset.csv" \
   --saving_path "./output/"
 ```
 
@@ -103,7 +103,7 @@ python main.py \
 
 ## 📁 Input Dataset Format
 
-Your dataset should be a CSV/TSV file with the following structure:
+Your dataset should be a CSV file with the following structure:
 
 ### Example Demographic Dataset
 | prompt_id | neutral             | group_a                       | group_b                       | group_c                       |
@@ -188,14 +188,10 @@ HUGGING_FACE_TOKEN=your_key_here
 
 ## 📊 Example Analysis Workflow
 
-```bash
-python DiFair/main.py --model gpt-4o-mini-2024-07-18 --dataset_type 2024-07-18 --bias gender --id_columns id --columns male female neutral --open_ai_key YOUR_OPENAI_KEY --dataset_path path\to\your\dataset.tsv
-
-```
-
----
-
-#### Use the output files for further statistical analysis in the provided Jupyter notebook `DiFair_LLM.ipynb`.
+1. **Prepare Datasets**: Ensure your demographic and calibration datasets are formatted correctly.
+2. **Run Pipeline**: Execute the `main.py` script with appropriate arguments. You will need to run it twice: once for the demographic dataset and once for the calibration dataset.
+3. **Review Outputs**: Ensure the generated CSV and Parquet files in the specified output directory are completly filled in and have no missing entries.
+4. **Statistical Analysis**: Use the provided Jupyter notebook `DiFair_LLM.ipynb` to analyze the results.
 
 ---
 
