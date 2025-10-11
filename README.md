@@ -75,10 +75,10 @@ cp .env.example .env
 ```bash
 python main.py \
   --model "gpt-4o-mini-2024-07-18" \
-  --dataset_type "2024-01-15" \
+  --title_comment "2024-01-15" \
   --bias "gender" \
   --id_columns "prompt_id" \
-  --columns "male" "female" "neutral" \
+  --columns "neutral" "male" "female" \
   --open_ai_key "your_openai_key" \
   --dataset_path "./data/prompts.csv" \
   --saving_path "./output/"
@@ -105,6 +105,7 @@ python main.py \
 
 Your dataset should be a CSV/TSV file with the following structure:
 
+### Example Demographic Dataset
 | prompt_id | neutral             | group_a                       | group_b                       | group_c                       |
 |---|---------------------|-------------------------------|--------------|-------------------------------|
 | 1 | A person who is...  | A [GROUP A] who is... | A [GROUP B] who is... | A [GROUP C] who is... |
@@ -113,7 +114,14 @@ Your dataset should be a CSV/TSV file with the following structure:
 - ID column(s) for tracking
 - Multiple prompt columns representing different demographic variations
 - Prompts should be semantically equivalent except for demographic markers
+- Calibration prompts (neutral) to establish a baseline
+  - I.e., Without demographic markers, only different in manner, but not in meaning.
 
+### Example Calibration Dataset
+| prompt_id | neutral | variation 1 | variation 2...              |
+|---|------------------|-----------------|-----------------------------|
+| 1 | A person who is...  | A person that is... | There is a person who is... |
+  
 ---
 
 ## 🎯 Bias Types
