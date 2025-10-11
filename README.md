@@ -276,5 +276,6 @@ Creative Commons Attribution-ShareAlike 4.0 International - see the [LICENSE](LI
 ---
 
 <div align="center">
+
 **[⬆ back to top](#difair-llm-detecting-and-measuring-bias-in-large-language-models)**
 </div>
