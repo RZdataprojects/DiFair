@@ -140,7 +140,7 @@ Raw and filtered model responses for each prompt variant.
 High-dimensional semantic representations of filtered responses.
 
 ### 3. Cosine Similarities (`*_cos_similarity.csv`)
-Pairwise similarity scores indicating bias levels.
+Pairwise similarity scores.
 
 **Lower similarity scores** between demographic variants suggest higher bias.
 
@@ -234,8 +234,7 @@ DiFair-LLM/
 ├── .gitignore                            # Git ignore rules
 ├── CODEOWNERS                            # Repository code owners
 ├── DiFair-LLM Flow.png                   # Pipeline visualization diagram
-├── DiFair.ipynb                          # Analysis notebook
-├── DiFair_LLM.ipynb                      # Main statistical analysis notebook
+├── DiFair_LLM.ipynb                      # Statistical analysis notebook
 ├── cos_similarity.py                     # Cosine similarity computation
 ├── embeddings.py                         # OpenAI embedding generation
 ├── environment.yaml                      # Conda environment specification
