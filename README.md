@@ -65,9 +65,7 @@ cd DiFair-LLM
 conda env create -f environment.yaml
 conda activate difair-llm
 
-# Set up environment variables
-cp .env.example .env
-# Edit .env with your API keys
+# Set up environment variables in .env
 ```
 
 ### Basic Usage
