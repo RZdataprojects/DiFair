@@ -34,7 +34,7 @@ def main():
     from pipeline import Pipeline
 
     # Read the dataset
-    df = pd.read_csv(args.dataset_path).iloc[:3]
+    df = pd.read_csv(args.dataset_path)
 
     # Ensure the saving path exists
     if not os.path.exists(args.saving_path):
