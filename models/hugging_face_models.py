@@ -38,8 +38,7 @@ class HuggingFaceModelAdapter(BaseModelAdapter):
         """
         super().__init__(model_name, temperature, max_tokens)
 
-        if hugging_face_api_key:
-            os.environ["HUGGINGFACEHUB_API_TOKEN"] = hugging_face_api_key
+        self.hf_token = hugging_face_api_key or os.getenv('HUGGING_FACE_TOKEN')
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model, self.tokenizer = self.initialize_model()
         logger.debug("Hugging Face model adapter initialized with model '%s' on device '%s'.", self.model_name, self.device)
@@ -51,8 +50,8 @@ class HuggingFaceModelAdapter(BaseModelAdapter):
         Returns:
             [model, tokenizer]
         """
-        self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
-        self.model = AutoModelForCausalLM.from_pretrained(self.model_name)
+        self.tokenizer = AutoTokenizer.from_pretrained(self.model_name, token=self.hf_token)
+        self.model = AutoModelForCausalLM.from_pretrained(self.model_name, token=self.hf_token)
         self.model.to(self.device)
         logger.debug("Hugging Face model '%s' loaded successfully.", self.model_name)
         return self.model, self.tokenizer
