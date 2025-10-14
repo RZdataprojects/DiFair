@@ -269,7 +269,7 @@ If you use DiFair-LLM in your research, please cite:
 
 ## 📄 License
 
-Creative Commons Attribution-ShareAlike 4.0 International - see the [LICENSE](LICENSE) file for details.
+Creative Commons Attribution-ShareAlike 4.0 International
 
 ---
 
