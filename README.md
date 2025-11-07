@@ -4,11 +4,9 @@
 
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-CC%20by%204.0-green.svg)](https://creativecommons.org/licenses/by/4.0/)
-[![arXiv](https://img.shields.io/badge/arXiv-coming_soon-b31b1b.svg)](https://arxiv.org/abs/Coming_Soon)
+[![Paper](https://img.shields.io/badge/arXiv-coming_soon-b31b1b.svg)](https://ebooks.iospress.nl/volumearticle/75847)
 
 *A comprehensive framework for bias detection in LLMs*
-
-[**Paper**](link-to-paper) • [**Documentation**](link-to-docs) • [**Citation**](#citation)
 
 </div>
 
